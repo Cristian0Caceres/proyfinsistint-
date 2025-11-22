@@ -100,7 +100,7 @@ plot_kalman(t, pos_real, mediciones, pos_est,
             title='Filtro de Kalman: Predicción de Posición')
 
 # Zoom 0-20 segundos
-zoom_idx = int(100/dt)  # Corregido para mostrar 20 segundos
+zoom_idx = int(20/dt)  # Corregido para mostrar 20 segundos
 plot_kalman(t[:zoom_idx], pos_real[:zoom_idx], mediciones[:zoom_idx], 
             pos_est[:zoom_idx], cov[:zoom_idx],
-            title='Zoom: Primeros 100 Segundos', zoom=True)
+            title='Zoom: Primeros 20 Segundos', zoom=True)
