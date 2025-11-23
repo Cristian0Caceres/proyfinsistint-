@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # Configuración y generación de datos
 # =============================================================================
 dt = 0.1
-t = np.arange(0, 1000, dt)  # Cambiado de 100 a 1000 segundos
+t = np.arange(0, 100, dt)  # Cambiado de 100 a 1000 segundos
 pos_real = 0.1 * (3*t - t**2)
 
 np.random.seed(42)
@@ -100,7 +100,7 @@ plot_kalman(t, pos_real, mediciones, pos_est,
             title='Filtro de Kalman: Predicción de Posición')
 
 # Zoom 0-20 segundos
-zoom_idx = int(100/dt)  # Corregido para mostrar 20 segundos
+zoom_idx = int(20/dt)  # Corregido para mostrar 20 segundos
 plot_kalman(t[:zoom_idx], pos_real[:zoom_idx], mediciones[:zoom_idx], 
             pos_est[:zoom_idx], cov[:zoom_idx],
-            title='Zoom: Primeros 100 Segundos', zoom=True)
+            title='Zoom: Primeros 20 Segundos', zoom=True)

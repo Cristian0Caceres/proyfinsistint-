@@ -1,0 +1,29 @@
+MEANSHIFT - REPORT
+========================================
+Python executable: C:\Users\ASUS F15\miniconda3\python.exe
+numpy: 2.3.4
+matplotlib: 3.10.6
+scikit-learn: 1.7.1
+
+Número de clusters encontrados: 5
+Centroides:
+  [5.673498582836058, 10.098616984831718]
+  [-7.084980335630224, -6.090260667220696]
+  [1.404828806133928, -6.462089763441962]
+  [8.002736203025249, 0.5224629744806621]
+  [8.415047686306048, 4.352731490654721]
+
+Etiquetas encontradas: [0 1 2 3 4]
+Cantidad total de datos: 200
+Cantidad de datos por cluster:
+  Cluster 0: 50 datos
+  Cluster 1: 50 datos
+  Cluster 2: 50 datos
+  Cluster 3: 49 datos
+  Cluster 4: 1 datos
+
+Predicciones para puntos test (en orden):
+  Punto 1: [-7.0, -6.0] -> Cluster 1
+  Punto 2: [1.5, -6.5] -> Cluster 2
+  Punto 3: [7.9, 0.5] -> Cluster 3
+  Punto 4: [5.5, 10.0] -> Cluster 0
