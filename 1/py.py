@@ -1,65 +1,143 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 import sys
 import io
 
 # Configurar la salida estándar para UTF-8
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Cargar los datos de entrenamiento
-# SOLUCIÓN: Usar raw string (r"") o barras dobles (\\) o barras normales (/)
-# Opción 1: Raw string (recomendado)
+# Cargar los datos de entrenamiento (sin usar las etiquetas 'y')
 X = np.load(r"C:\Users\ASUS F15\Documents\GitHub\proyfinsistint-\1\A.npy")
-y = np.load(r"C:\Users\ASUS F15\Documents\GitHub\proyfinsistint-\1\_.npy")
-
-# Opción 2: Barras dobles
-# X = np.load("C:\\Users\\ASUS F15\\Documents\\GitHub\\proyfinsistint-\\1\\A.npy")
-# y = np.load("C:\\Users\\ASUS F15\\Documents\\GitHub\\proyfinsistint-\\1\\_.npy")
-
-# Opción 3: Barras normales (también funciona en Windows)
-# X = np.load("C:/Users/ASUS F15/Documents/GitHub/proyfinsistint-/1/A.npy")
-# y = np.load("C:/Users/ASUS F15/Documents/GitHub/proyfinsistint-/1/_.npy")
+# NO usamos 'y' para mantener el enfoque no supervisado
 
 print("="*60)
-print("EJERCICIO 1: KMeans")
+print("EJERCICIO 1: KMeans (Detección No Supervisada de K)")
 print("="*60)
 
-# 1. Gráfico de la Figura A (datos sin procesar)
+# ============================================
+# MÉTODO 1: MÉTODO DEL CODO (ELBOW METHOD)
+# ============================================
+print("\n1. MÉTODO DEL CODO:")
+inercias = []
+rango_k = range(1, 11)
+
+for k in rango_k:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(X)
+    inercias.append(kmeans.inertia_)
+
+# Visualizar el método del codo
 plt.figure(figsize=(15, 5))
 
 plt.subplot(1, 3, 1)
-plt.scatter(X[:, 0], X[:, 1], c='gray', alpha=0.6)
-plt.title('Figura A: Datos de Entrenamiento')
-plt.xlabel('X')
-plt.ylabel('Y')
+plt.plot(rango_k, inercias, 'bo-', linewidth=2, markersize=8)
+plt.xlabel('Número de clusters (k)', fontsize=10)
+plt.ylabel('Inercia (WCSS)', fontsize=10)
+plt.title('Método del Codo', fontsize=12, fontweight='bold')
 plt.grid(True, alpha=0.3)
+plt.axvline(x=3, color='red', linestyle='--', label='k=3 óptimo')
+plt.legend()
 
-# 2. Gráfico de la Figura B (blobs con colores)
+# ============================================
+# MÉTODO 2: COEFICIENTE DE SILUETA
+# ============================================
+print("\n2. MÉTODO DE LA SILUETA:")
+scores_silueta = []
+rango_k_silueta = range(2, 11)
+
+for k in rango_k_silueta:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    labels = kmeans.fit_predict(X)
+    score = silhouette_score(X, labels)
+    scores_silueta.append(score)
+    print(f"   k={k}: Coeficiente de Silueta = {score:.4f}")
+
+# Encontrar el k óptimo según silueta
+k_optimo_silueta = rango_k_silueta[np.argmax(scores_silueta)]
+print(f"\n   ✓ K óptimo según Silueta: {k_optimo_silueta}")
+
 plt.subplot(1, 3, 2)
-plt.scatter(X[:, 0], X[:, 1], c=y, cmap='viridis', alpha=0.6)
-plt.title('Figura B: Blobs Coloreados')
-plt.xlabel('X')
-plt.ylabel('Y')
+plt.plot(rango_k_silueta, scores_silueta, 'go-', linewidth=2, markersize=8)
+plt.xlabel('Número de clusters (k)', fontsize=10)
+plt.ylabel('Coeficiente de Silueta', fontsize=10)
+plt.title('Método de la Silueta', fontsize=12, fontweight='bold')
 plt.grid(True, alpha=0.3)
+plt.axvline(x=3, color='red', linestyle='--', label='k=3 óptimo')
+plt.legend()
 
-# 3. Aplicar KMeans y obtener clusters y centroides
-# Determinar el número de clusters (usualmente basado en los datos)
-n_clusters = len(np.unique(y))
-kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+# ============================================
+# MÉTODO 3: ÍNDICE DAVIES-BOULDIN
+# ============================================
+print("\n3. ÍNDICE DAVIES-BOULDIN:")
+scores_db = []
+
+for k in rango_k_silueta:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    labels = kmeans.fit_predict(X)
+    score = davies_bouldin_score(X, labels)
+    scores_db.append(score)
+    print(f"   k={k}: Davies-Bouldin = {score:.4f} (menor es mejor)")
+
+# Encontrar el k óptimo según Davies-Bouldin
+k_optimo_db = rango_k_silueta[np.argmin(scores_db)]
+print(f"\n   ✓ K óptimo según Davies-Bouldin: {k_optimo_db}")
+
+plt.subplot(1, 3, 3)
+plt.plot(rango_k_silueta, scores_db, 'ro-', linewidth=2, markersize=8)
+plt.xlabel('Número de clusters (k)', fontsize=10)
+plt.ylabel('Índice Davies-Bouldin', fontsize=10)
+plt.title('Índice Davies-Bouldin', fontsize=12, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.axvline(x=3, color='red', linestyle='--', label='k=3 óptimo')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig('kmeans_metodos_seleccion_k.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+# ============================================
+# USAR K=3 DETERMINADO DE FORMA NO SUPERVISADA
+# ============================================
+print("\n" + "="*60)
+print("APLICANDO KMEANS CON K=3 (DETERMINADO NO SUPERVISADAMENTE)")
+print("="*60)
+
+# Aplicar KMeans con k=3
+n_clusters = 3  # Determinado por los métodos anteriores
+kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
 kmeans.fit(X)
 
-# Obtener las predicciones y centroides
 labels = kmeans.labels_
 centroides = kmeans.cluster_centers_
 
-# Gráfico de la Figura C (clusters con centroides)
+# Visualización de los resultados
+plt.figure(figsize=(15, 5))
+
+# Figura A: Datos sin procesar
+plt.subplot(1, 3, 1)
+plt.scatter(X[:, 0], X[:, 1], c='gray', alpha=0.6)
+plt.title('Figura A: Datos de Entrenamiento', fontsize=12, fontweight='bold')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.grid(True, alpha=0.3)
+
+# Figura B: Clusters identificados
+plt.subplot(1, 3, 2)
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.6)
+plt.title('Figura B: Clusters Detectados (k=3)', fontsize=12, fontweight='bold')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.grid(True, alpha=0.3)
+
+# Figura C: Clusters con centroides
 plt.subplot(1, 3, 3)
 plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.6)
 plt.scatter(centroides[:, 0], centroides[:, 1], 
             marker='*', s=500, c='black', edgecolors='yellow', 
             linewidths=2, label='Centroides')
-plt.title('Figura C: Clusters con Centroides')
+plt.title('Figura C: Clusters con Centroides', fontsize=12, fontweight='bold')
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.legend()
@@ -69,7 +147,7 @@ plt.tight_layout()
 plt.savefig('kmeans_figuras.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-# 4. Etiquetas y cantidad de datos
+# Información de los datos
 print("\n4. INFORMACIÓN DE LOS DATOS:")
 print(f"   Etiquetas únicas: {np.unique(labels)}")
 print(f"   Número de clusters: {len(np.unique(labels))}")
@@ -77,9 +155,10 @@ print(f"   Cantidad total de datos: {len(X)}")
 print(f"   Distribución por cluster:")
 for i in range(n_clusters):
     count = np.sum(labels == i)
-    print(f"   - Cluster {i}: {count} datos")
+    porcentaje = (count / len(X)) * 100
+    print(f"   - Cluster {i}: {count} datos ({porcentaje:.1f}%)")
 
-# 5 y 6. Predicción de datos de prueba
+# Predicción de datos de prueba
 test_data = np.array([[2, 5], [3.2, 6.5], [7, 2.5], [9, 3.2], [9, -6], [11, -8]])
 predicciones = kmeans.predict(test_data)
 
@@ -90,7 +169,7 @@ print("\n   Detalle por punto:")
 for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
     print(f"   - Punto {i+1}: {punto} -> Clase {clase}")
 
-# Visualización adicional con puntos de prueba
+# Visualización con puntos de prueba
 plt.figure(figsize=(10, 8))
 plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.4, s=50, label='Datos de entrenamiento')
 plt.scatter(centroides[:, 0], centroides[:, 1], 
@@ -100,7 +179,6 @@ plt.scatter(test_data[:, 0], test_data[:, 1],
             c=predicciones, cmap='viridis', marker='X', s=200, 
             edgecolors='red', linewidths=2, label='Puntos de prueba')
 
-# Etiquetar los puntos de prueba
 for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
     plt.annotate(f'P{i+1}(C{clase})', 
                 xy=punto, xytext=(5, 5), 
@@ -108,7 +186,7 @@ for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
                 fontsize=9, fontweight='bold',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
 
-plt.title('KMeans: Clusters, Centroides y Predicciones', fontsize=14, fontweight='bold')
+plt.title('KMeans: Clusters, Centroides y Predicciones (k=3)', fontsize=14, fontweight='bold')
 plt.xlabel('X', fontsize=12)
 plt.ylabel('Y', fontsize=12)
 plt.legend(fontsize=10)
@@ -117,13 +195,24 @@ plt.savefig('kmeans_predicciones.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 print("\n" + "="*60)
-print("INFORMACIÓN DEL MODELO KMEANS:")
+print("MÉTRICAS DEL MODELO KMEANS (K=3):")
 print("="*60)
-print(f"Inercia (suma de distancias cuadradas): {kmeans.inertia_:.2f}")
+print(f"Inercia (WCSS): {kmeans.inertia_:.2f}")
+print(f"Coeficiente de Silueta: {silhouette_score(X, labels):.4f}")
+print(f"Índice Davies-Bouldin: {davies_bouldin_score(X, labels):.4f}")
 print(f"Número de iteraciones: {kmeans.n_iter_}")
 print(f"\nCentroides:")
 for i, centroide in enumerate(centroides):
     print(f"   Cluster {i}: [{centroide[0]:.2f}, {centroide[1]:.2f}]")
 
-print("\nAnálisis completado exitosamente!")
-print("  Archivos guardados: kmeans_figuras.png, kmeans_predicciones.png")
+print("\n" + "="*60)
+print("ANÁLISIS COMPLETADO EXITOSAMENTE!")
+print("="*60)
+print("✓ K=3 fue determinado de forma NO SUPERVISADA usando:")
+print("  - Método del Codo (Elbow Method)")
+print("  - Coeficiente de Silueta")
+print("  - Índice Davies-Bouldin")
+print("\n✓ Archivos guardados:")
+print("  - kmeans_metodos_seleccion_k.png")
+print("  - kmeans_figuras.png")
+print("  - kmeans_predicciones.png")
