@@ -1,25 +1,43 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, adjusted_rand_score, normalized_mutual_info_score
 import sys
 import io
+import os
 
 # Configurar la salida estándar para UTF-8
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Cargar los datos de entrenamiento (sin usar las etiquetas 'y')
+# Crear carpeta 'resultados' si no existe
+if not os.path.exists('resultados'):
+    os.makedirs('resultados')
+    print("✓ Carpeta 'resultados' creada exitosamente\n")
+else:
+    print("✓ Carpeta 'resultados' ya existe\n")
+
+# Cargar los datos de entrenamiento
 X = np.load(r"C:\Users\ASUS F15\Documents\GitHub\proyfinsistint-\1\A.npy")
-# NO usamos 'y' para mantener el enfoque no supervisado
+y_true = np.load(r"C:\Users\ASUS F15\Documents\GitHub\proyfinsistint-\1\_.npy")
 
 print("="*60)
-print("EJERCICIO 1: KMeans (Detección No Supervisada de K)")
+print("EJERCICIO 1: KMeans con Análisis de Etiquetas Reales")
 print("="*60)
+print(f"\nDatos cargados:")
+print(f"   X (características): {X.shape}")
+print(f"   y (etiquetas reales): {y_true.shape}")
+print(f"   Clases reales en los datos: {np.unique(y_true)}")
+print(f"   Distribución de clases reales:")
+for clase in np.unique(y_true):
+    count = np.sum(y_true == clase)
+    print(f"   - Clase {clase}: {count} muestras ({count/len(y_true)*100:.1f}%)")
 
 # ============================================
 # MÉTODO 1: MÉTODO DEL CODO (ELBOW METHOD)
 # ============================================
-print("\n1. MÉTODO DEL CODO:")
+print("\n" + "="*60)
+print("1. MÉTODO DEL CODO:")
+print("="*60)
 inercias = []
 rango_k = range(1, 11)
 
@@ -94,14 +112,14 @@ plt.axvline(x=3, color='red', linestyle='--', label='k=3 óptimo')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig('kmeans_metodos_seleccion_k.png', dpi=300, bbox_inches='tight')
+plt.savefig('resultados/kmeans_metodos_seleccion_k.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 # ============================================
 # USAR K=3 DETERMINADO DE FORMA NO SUPERVISADA
 # ============================================
 print("\n" + "="*60)
-print("APLICANDO KMEANS CON K=3 (DETERMINADO NO SUPERVISADAMENTE)")
+print("APLICANDO KMEANS CON K=3")
 print("="*60)
 
 # Aplicar KMeans con k=3
@@ -112,88 +130,163 @@ kmeans.fit(X)
 labels = kmeans.labels_
 centroides = kmeans.cluster_centers_
 
-# Visualización de los resultados
-plt.figure(figsize=(15, 5))
+# ============================================
+# FIGURAS A, B y C - REQUISITO DEL EJERCICIO
+# ============================================
+plt.figure(figsize=(18, 5))
 
-# Figura A: Datos sin procesar
+# Figura A: Datos sin procesar (usando etiquetas reales de _.npy)
 plt.subplot(1, 3, 1)
-plt.scatter(X[:, 0], X[:, 1], c='gray', alpha=0.6)
-plt.title('Figura A: Datos de Entrenamiento', fontsize=12, fontweight='bold')
+plt.scatter(X[:, 0], X[:, 1], c=y_true, cmap='viridis', alpha=0.6, s=50)
+plt.title('Figura A: Datos de Entrenamiento\n(Etiquetas Reales de _.npy)', 
+          fontsize=12, fontweight='bold')
 plt.xlabel('X')
 plt.ylabel('Y')
+plt.colorbar(label='Clase Real')
 plt.grid(True, alpha=0.3)
 
-# Figura B: Clusters identificados
+# Figura B: Clusters identificados por KMeans
 plt.subplot(1, 3, 2)
-plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.6)
-plt.title('Figura B: Clusters Detectados (k=3)', fontsize=12, fontweight='bold')
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='plasma', alpha=0.6, s=50)
+plt.title('Figura B: Blobs Detectados por KMeans\n(k=3)', 
+          fontsize=12, fontweight='bold')
 plt.xlabel('X')
 plt.ylabel('Y')
+plt.colorbar(label='Cluster KMeans')
 plt.grid(True, alpha=0.3)
 
-# Figura C: Clusters con centroides
+# Figura C: Clusters con centroides (estrella negra)
 plt.subplot(1, 3, 3)
-plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.6)
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='plasma', alpha=0.6, s=50)
 plt.scatter(centroides[:, 0], centroides[:, 1], 
-            marker='*', s=500, c='black', edgecolors='yellow', 
-            linewidths=2, label='Centroides')
-plt.title('Figura C: Clusters con Centroides', fontsize=12, fontweight='bold')
+            marker='*', s=800, c='black', edgecolors='yellow', 
+            linewidths=3, label='Centroides', zorder=5)
+plt.title('Figura C: Clusters con Centroides\n(Estrella Negra)', 
+          fontsize=12, fontweight='bold')
 plt.xlabel('X')
 plt.ylabel('Y')
-plt.legend()
+plt.legend(fontsize=10)
 plt.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('kmeans_figuras.png', dpi=300, bbox_inches='tight')
+plt.savefig('resultados/kmeans_figuras_abc.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-# Información de los datos
-print("\n4. INFORMACIÓN DE LOS DATOS:")
-print(f"   Etiquetas únicas: {np.unique(labels)}")
+# ============================================
+# 4. INFORMACIÓN DE LAS ETIQUETAS Y DATOS
+# ============================================
+print("\n" + "="*60)
+print("4. INFORMACIÓN DE LAS ETIQUETAS Y DATOS:")
+print("="*60)
+print(f"   Etiquetas únicas detectadas por KMeans: {np.unique(labels)}")
 print(f"   Número de clusters: {len(np.unique(labels))}")
 print(f"   Cantidad total de datos: {len(X)}")
-print(f"   Distribución por cluster:")
+print(f"\n   Distribución por cluster (KMeans):")
 for i in range(n_clusters):
     count = np.sum(labels == i)
     porcentaje = (count / len(X)) * 100
     print(f"   - Cluster {i}: {count} datos ({porcentaje:.1f}%)")
 
-# Predicción de datos de prueba
+print(f"\n   Distribución por clase real (_.npy):")
+for clase in np.unique(y_true):
+    count = np.sum(y_true == clase)
+    porcentaje = (count / len(y_true)) * 100
+    print(f"   - Clase {clase}: {count} datos ({porcentaje:.1f}%)")
+
+# ============================================
+# 5 y 6. PREDICCIONES PARA DATOS DE PRUEBA
+# ============================================
 test_data = np.array([[2, 5], [3.2, 6.5], [7, 2.5], [9, 3.2], [9, -6], [11, -8]])
 predicciones = kmeans.predict(test_data)
 
-print("\n5 y 6. PREDICCIONES PARA DATOS DE PRUEBA:")
-print(f"   Datos de prueba: {test_data.tolist()}")
-print(f"   Predicciones: {predicciones}")
-print("\n   Detalle por punto:")
-for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
-    print(f"   - Punto {i+1}: {punto} -> Clase {clase}")
+print("\n" + "="*60)
+print("5 y 6. PREDICCIONES PARA DATOS DE PRUEBA:")
+print("="*60)
+print(f"   Datos de prueba:")
+for i, punto in enumerate(test_data):
+    print(f"   - Punto {i+1}: {punto}")
 
-# Visualización con puntos de prueba
-plt.figure(figsize=(10, 8))
-plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis', alpha=0.4, s=50, label='Datos de entrenamiento')
+print(f"\n   Predicciones (clases asignadas):")
+for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
+    print(f"   - Punto {i+1}: {punto} → Clase {clase}")
+
+# ============================================
+# VISUALIZACIÓN CON PUNTOS DE PRUEBA
+# ============================================
+plt.figure(figsize=(12, 9))
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='plasma', alpha=0.4, s=50, 
+            label='Datos de entrenamiento')
 plt.scatter(centroides[:, 0], centroides[:, 1], 
-            marker='*', s=500, c='black', edgecolors='yellow', 
-            linewidths=2, label='Centroides')
+            marker='*', s=800, c='black', edgecolors='yellow', 
+            linewidths=3, label='Centroides', zorder=5)
 plt.scatter(test_data[:, 0], test_data[:, 1], 
-            c=predicciones, cmap='viridis', marker='X', s=200, 
-            edgecolors='red', linewidths=2, label='Puntos de prueba')
+            c=predicciones, cmap='plasma', marker='X', s=300, 
+            edgecolors='red', linewidths=3, label='Puntos de prueba', zorder=4)
 
 for i, (punto, clase) in enumerate(zip(test_data, predicciones)):
-    plt.annotate(f'P{i+1}(C{clase})', 
-                xy=punto, xytext=(5, 5), 
+    plt.annotate(f'P{i+1}→C{clase}', 
+                xy=punto, xytext=(8, 8), 
                 textcoords='offset points', 
-                fontsize=9, fontweight='bold',
-                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+                fontsize=10, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.4', facecolor='white', 
+                         edgecolor='red', alpha=0.9, linewidth=2))
 
-plt.title('KMeans: Clusters, Centroides y Predicciones (k=3)', fontsize=14, fontweight='bold')
+plt.title('KMeans: Clusters, Centroides y Predicciones (k=3)', 
+          fontsize=14, fontweight='bold')
 plt.xlabel('X', fontsize=12)
 plt.ylabel('Y', fontsize=12)
-plt.legend(fontsize=10)
+plt.legend(fontsize=11, loc='best')
 plt.grid(True, alpha=0.3)
-plt.savefig('kmeans_predicciones.png', dpi=300, bbox_inches='tight')
+plt.savefig('resultados/kmeans_predicciones.png', dpi=300, bbox_inches='tight')
 plt.show()
 
+# ============================================
+# COMPARACIÓN: CLUSTERS vs CLASES REALES
+# ============================================
+print("\n" + "="*60)
+print("COMPARACIÓN: CLUSTERS DE KMEANS vs CLASES REALES:")
+print("="*60)
+
+# Calcular métricas de comparación
+ari = adjusted_rand_score(y_true, labels)
+nmi = normalized_mutual_info_score(y_true, labels)
+
+print(f"   Adjusted Rand Index (ARI): {ari:.4f}")
+print(f"   - Rango: [-1, 1], donde 1 es coincidencia perfecta")
+print(f"   - Valor obtenido: {'Excelente' if ari > 0.8 else 'Bueno' if ari > 0.6 else 'Regular'}")
+
+print(f"\n   Normalized Mutual Information (NMI): {nmi:.4f}")
+print(f"   - Rango: [0, 1], donde 1 es coincidencia perfecta")
+print(f"   - Valor obtenido: {'Excelente' if nmi > 0.8 else 'Bueno' if nmi > 0.6 else 'Regular'}")
+
+# Visualización comparativa
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Subplot 1: Etiquetas reales
+axes[0].scatter(X[:, 0], X[:, 1], c=y_true, cmap='viridis', alpha=0.6, s=50)
+axes[0].set_title('Clases Reales (_.npy)', fontsize=13, fontweight='bold')
+axes[0].set_xlabel('X')
+axes[0].set_ylabel('Y')
+axes[0].grid(True, alpha=0.3)
+
+# Subplot 2: Clusters de KMeans
+axes[1].scatter(X[:, 0], X[:, 1], c=labels, cmap='plasma', alpha=0.6, s=50)
+axes[1].scatter(centroides[:, 0], centroides[:, 1], 
+                marker='*', s=800, c='black', edgecolors='yellow', 
+                linewidths=3, zorder=5)
+axes[1].set_title(f'Clusters KMeans (k=3)\nARI={ari:.3f}, NMI={nmi:.3f}', 
+                  fontsize=13, fontweight='bold')
+axes[1].set_xlabel('X')
+axes[1].set_ylabel('Y')
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('resultados/kmeans_comparacion.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+# ============================================
+# MÉTRICAS FINALES DEL MODELO
+# ============================================
 print("\n" + "="*60)
 print("MÉTRICAS DEL MODELO KMEANS (K=3):")
 print("="*60)
@@ -201,18 +294,20 @@ print(f"Inercia (WCSS): {kmeans.inertia_:.2f}")
 print(f"Coeficiente de Silueta: {silhouette_score(X, labels):.4f}")
 print(f"Índice Davies-Bouldin: {davies_bouldin_score(X, labels):.4f}")
 print(f"Número de iteraciones: {kmeans.n_iter_}")
-print(f"\nCentroides:")
+print(f"\nCentroides de los clusters:")
 for i, centroide in enumerate(centroides):
-    print(f"   Cluster {i}: [{centroide[0]:.2f}, {centroide[1]:.2f}]")
+    print(f"   Cluster {i}: [{centroide[0]:.4f}, {centroide[1]:.4f}]")
 
 print("\n" + "="*60)
 print("ANÁLISIS COMPLETADO EXITOSAMENTE!")
 print("="*60)
-print("✓ K=3 fue determinado de forma NO SUPERVISADA usando:")
-print("  - Método del Codo (Elbow Method)")
-print("  - Coeficiente de Silueta")
-print("  - Índice Davies-Bouldin")
-print("\n✓ Archivos guardados:")
-print("  - kmeans_metodos_seleccion_k.png")
-print("  - kmeans_figuras.png")
-print("  - kmeans_predicciones.png")
+print("✓ Archivos generados en la carpeta 'resultados/':")
+print("  1. resultados/kmeans_metodos_seleccion_k.png (Métodos de selección de k)")
+print("  2. resultados/kmeans_figuras_abc.png (Figuras A, B y C requeridas)")
+print("  3. resultados/kmeans_predicciones.png (Predicciones de datos test)")
+print("  4. resultados/kmeans_comparacion.png (Comparación clusters vs clases reales)")
+print("\n✓ Se utilizó _.npy para:")
+print("  - Mostrar las etiquetas reales en Figura A")
+print("  - Comparar clusters de KMeans con clases verdaderas")
+print("  - Calcular métricas ARI y NMI")
+print("="*60)
