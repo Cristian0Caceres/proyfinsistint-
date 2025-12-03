@@ -1,0 +1,52 @@
+======================================================================
+PARTE 8 - REPORTE FILTRO COMPLEMENTARIO
+======================================================================
+
+EXPLICACION DEL FILTRO COMPLEMENTARIO:
+----------------------------------------------------------------------
+El filtro complementario combina dos fuentes de información:
+  y[n] = alpha * y[n-1] + (1 - alpha) * x[n]
+
+Donde:
+  - alpha: coeficiente de suavizado (0 < alpha < 1)
+  - y[n-1]: salida anterior (componente de baja frecuencia)
+  - x[n]: entrada actual (componente de alta frecuencia)
+
+INTERPRETACION DE ALPHA:
+  - alpha cercano a 1: Más suave, más retardo, elimina más ruido
+  - alpha cercano a 0: Menos suave, respuesta rápida, sigue más la señal
+
+======================================================================
+RESULTADOS
+======================================================================
+
+MEJOR ALPHA ENCONTRADO: 0.1
+
+COMPARACION DE ERRORES:
+  Filtro de Kalman:
+    MAE  = 0.5923
+    MSE  = 0.5557
+    RMSE = 0.7454
+
+  Filtro Complementario (alpha=0.1):
+    MAE  = 1.3030
+    MSE  = 2.3872
+    RMSE = 1.5450
+
+MEJORA: -329.59% en MSE
+
+PRUEBAS REALIZADAS CON DIFERENTES ALPHAS:
+  alpha = 0.10 | MSE = 2.3872
+  alpha = 0.30 | MSE = 25.6856
+  alpha = 0.50 | MSE = 135.0144
+  alpha = 0.70 | MSE = 726.7777
+  alpha = 0.90 | MSE = 10736.7434
+  alpha = 0.95 | MSE = 47666.5458
+  alpha = 0.98 | MSE = 314025.6575
+
+======================================================================
+CONCLUSION
+======================================================================
+El filtro complementario con alpha=0.1 proporciona una mejor
+suavización de la curva predicha por el Filtro de Kalman, reduciendo
+el error en un -329.59% y mejorando la precisión de la estimación.

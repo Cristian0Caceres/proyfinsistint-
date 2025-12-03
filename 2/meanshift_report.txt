@@ -1,7 +1,7 @@
 MEANSHIFT - REPORT
 ========================================
 Python executable: C:\Users\ASUS F15\miniconda3\python.exe
-numpy: 2.3.4
+numpy: 2.2.6
 matplotlib: 3.10.6
 scikit-learn: 1.7.1
 

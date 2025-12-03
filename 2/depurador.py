@@ -185,7 +185,7 @@ print("Guardado:", fig_pred)
 report_path = os.path.join(BASE_DIR, 'meanshift_report.txt')
 with open(report_path, 'w') as f:
     f.write("MEANSHIFT - REPORT\n")
-    f.write("=" * 40 + "\n")
+    f.write("=" * 20 + "\n")
     f.write(f"Python executable: {sys.executable}\n")
     f.write(f"numpy: {np.__version__}\n")
     f.write(f"matplotlib: {mpl.__version__}\n")
@@ -204,7 +204,7 @@ with open(report_path, 'w') as f:
         f.write(f"  Punto {i+1}: {p.tolist()} -> Cluster {int(predicciones[i])}\n")
 print("Reporte guardado en:", report_path)
 
-print("\n" + "=" * 60)
+print("\n" + "=" * 80)
 print("ANÁLISIS COMPLETADO")
 print("Gráficos guardados en:", BASE_DIR)
 print("CSV guardado en:", csv_path)
